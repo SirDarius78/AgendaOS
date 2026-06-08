@@ -31,6 +31,7 @@ export default function Column({
   onAddTask,
   onEditTask,
   onDeleteTask,
+  readOnly = false,
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const meta = COLUMN_META[id];
@@ -53,13 +54,15 @@ export default function Column({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => onAddTask(id)}
-            className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
-            title="Agregar tarea"
-          >
-            <Plus size={14} />
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => onAddTask(id)}
+              className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Agregar tarea"
+            >
+              <Plus size={14} />
+            </button>
+          )}
           <button
             onClick={() => setCollapsed((prev) => !prev)}
             className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
@@ -96,11 +99,12 @@ export default function Column({
                 task={task}
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
+                readOnly={readOnly}
               />
             ))}
           </SortableContext>
 
-          {tasks.length === 0 && (
+          {!readOnly && tasks.length === 0 && (
             <button
               onClick={() => onAddTask(id)}
               className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-gray-200 text-gray-300 hover:border-indigo-300 hover:text-indigo-400 transition-colors text-xs gap-1"

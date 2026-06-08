@@ -11,7 +11,13 @@ const PRIORITY_STYLES = {
 
 const PRIORITY_LABELS = { high: "Alta", medium: "Media", low: "Baja" };
 
-export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
+export default function TaskCard({
+  task,
+  onEdit,
+  onDelete,
+  overlay = false,
+  readOnly = false,
+}) {
   const {
     attributes,
     listeners,
@@ -21,6 +27,7 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
     isDragging,
   } = useSortable({
     id: task.id,
+    disabled: readOnly,
   });
 
   const style = {
@@ -46,13 +53,15 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
       <div className="p-3">
         <div className="flex items-start gap-2">
           {/* Drag handle */}
-          <button
-            {...attributes}
-            {...listeners}
-            className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 p-1 -m-1"
-          >
-            <GripVertical size={14} />
-          </button>
+          {!readOnly && (
+            <button
+              {...attributes}
+              {...listeners}
+              className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 p-1 -m-1"
+            >
+              <GripVertical size={14} />
+            </button>
+          )}
 
           <div className="flex-1 min-w-0">
             {/* Title */}
@@ -103,20 +112,22 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
-            <button
-              onClick={() => onEdit(task)}
-              className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-colors"
-            >
-              <Pencil size={13} />
-            </button>
-            <button
-              onClick={() => onDelete(task.id)}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-            >
-              <Trash2 size={13} />
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="flex gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
+              <button
+                onClick={() => onEdit(task)}
+                className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-colors"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                onClick={() => onDelete(task.id)}
+                className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

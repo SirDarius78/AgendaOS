@@ -43,6 +43,7 @@ function validateTaskInput(task) {
 function mapTaskFromDb(row) {
   return {
     id: row.id,
+    boardId: row.board_id,
     title: row.title,
     description: row.description ?? "",
     date: row.due_date ?? "",
@@ -58,24 +59,40 @@ function mapTaskFromDb(row) {
 }
 
 export async function fetchTasksForUser(userId) {
-  const { data, error } = await supabase
+  return fetchTasksForBoard(userId, null);
+}
+
+export async function fetchTasksForBoard(userId, boardId) {
+  let query = supabase
     .from("tasks")
     .select("*")
-    .eq("user_id", userId)
     .order("status", { ascending: true })
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
+
+  if (boardId) {
+    query = query.eq("board_id", boardId);
+  } else {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return (data || []).map(mapTaskFromDb);
 }
 
-export async function createTaskForUser(userId, task, position = 0) {
+export async function createTaskForBoard({
+  userId,
+  boardId,
+  task,
+  position = 0,
+}) {
   const payload = validateTaskInput(task);
 
   const { data, error } = await supabase
     .from("tasks")
-    .insert({ ...payload, user_id: userId, position })
+    .insert({ ...payload, user_id: userId, board_id: boardId, position })
     .select("*")
     .single();
 
@@ -83,7 +100,7 @@ export async function createTaskForUser(userId, task, position = 0) {
   return mapTaskFromDb(data);
 }
 
-export async function updateTaskForUser(userId, taskId, patch) {
+export async function updateTaskForBoard({ userId, boardId, taskId, patch }) {
   const payload = validateTaskInput(patch);
 
   const { data, error } = await supabase
@@ -91,6 +108,7 @@ export async function updateTaskForUser(userId, taskId, patch) {
     .update(payload)
     .eq("id", taskId)
     .eq("user_id", userId)
+    .eq("board_id", boardId)
     .select("*")
     .single();
 
@@ -98,17 +116,18 @@ export async function updateTaskForUser(userId, taskId, patch) {
   return mapTaskFromDb(data);
 }
 
-export async function deleteTaskForUser(userId, taskId) {
+export async function deleteTaskForBoard({ userId, boardId, taskId }) {
   const { error } = await supabase
     .from("tasks")
     .delete()
     .eq("id", taskId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("board_id", boardId);
 
   if (error) throw error;
 }
 
-export async function moveTaskForUser(userId, taskId, status) {
+export async function moveTaskForBoard({ userId, boardId, taskId, status }) {
   if (!VALID_STATUSES.includes(status)) {
     throw new Error("Estado de tarea invalido");
   }
@@ -118,6 +137,7 @@ export async function moveTaskForUser(userId, taskId, status) {
     .update({ status })
     .eq("id", taskId)
     .eq("user_id", userId)
+    .eq("board_id", boardId)
     .select("*")
     .single();
 
@@ -125,7 +145,7 @@ export async function moveTaskForUser(userId, taskId, status) {
   return mapTaskFromDb(data);
 }
 
-export async function reorderTasksForUser(userId, orderedTasks) {
+export async function reorderTasksForBoard({ userId, boardId, orderedTasks }) {
   if (!orderedTasks.length) return;
 
   const updates = orderedTasks.map((task, index) =>
@@ -133,7 +153,8 @@ export async function reorderTasksForUser(userId, orderedTasks) {
       .from("tasks")
       .update({ position: index, status: task.status })
       .eq("id", task.id)
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .eq("board_id", boardId),
   );
 
   const results = await Promise.all(updates);

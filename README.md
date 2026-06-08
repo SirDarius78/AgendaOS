@@ -20,6 +20,7 @@ npm install
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+VITE_APP_URL=http://localhost:5173
 ```
 
 Esas variables salen de tu proyecto de Supabase:
@@ -49,3 +50,34 @@ npm run dev
 ## Seguridad (RLS)
 
 El script incluye Row Level Security para garantizar que cada usuario solo pueda leer/escribir sus propias tareas.
+
+## Invitaciones por email (Supabase + Resend)
+
+La invitacion de tableros usa una Supabase Edge Function:
+
+- `supabase/functions/send-board-invite/index.ts`
+
+### Secrets requeridos en Supabase (Edge Function)
+
+Configura estos secrets en tu proyecto de Supabase:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `APP_BASE_URL` (por ejemplo `https://tu-dominio.com`)
+- `SUPABASE_SERVICE_ROLE_KEY` (si no esta disponible por defecto)
+
+### Despliegue de la funcion
+
+```bash
+supabase functions deploy send-board-invite
+```
+
+### Variables en Vercel
+
+Si despliegas frontend en Vercel, sube al menos:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_APP_URL`
+
+Nota: `RESEND_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` no deben ir al cliente. Esos van en Supabase Functions Secrets.

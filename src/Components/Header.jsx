@@ -32,6 +32,7 @@ export default function Header({
   onDateChange,
   userEmail,
   onSignOut,
+  disableNewTask = false,
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100 px-3 py-3 sm:px-4">
@@ -62,10 +63,11 @@ export default function Header({
           )}
           <button
             onClick={onNewTask}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+            disabled={disableNewTask}
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white px-3 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
           >
             <Plus size={16} />
-            Nueva tarea
+            {disableNewTask ? "Solo lectura" : "Nueva tarea"}
           </button>
         </div>
 

@@ -11,11 +11,26 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { useTasks } from "../../context/TaskContext";
 import Column from "./Column";
 import TaskCard from "./TaskCard";
+import SharingPanel from "./SharingPanel";
 
 const STATUSES = ["todo", "inprogress", "done"];
 
 export default function BoardView({ onAddTask, onEditTask }) {
-  const { tasks, moveTask, reorderTasks, deleteTask } = useTasks();
+  const {
+    tasks,
+    moveTask,
+    reorderTasks,
+    deleteTask,
+    boards,
+    activeBoardId,
+    setActiveBoardId,
+    boardMembers,
+    myInvitations,
+    isReadOnlyBoard,
+    inviteViewer,
+    acceptInvitation,
+    declineInvitation,
+  } = useTasks();
   const [activeTask, setActiveTask] = useState(null);
 
   const sensors = useSensors(
@@ -28,10 +43,12 @@ export default function BoardView({ onAddTask, onEditTask }) {
   }, {});
 
   const handleDragStart = ({ active }) => {
+    if (isReadOnlyBoard) return;
     setActiveTask(tasks.find((t) => t.id === active.id) || null);
   };
 
   const handleDragEnd = ({ active, over }) => {
+    if (isReadOnlyBoard) return;
     setActiveTask(null);
     if (!over) return;
 
@@ -62,8 +79,20 @@ export default function BoardView({ onAddTask, onEditTask }) {
 
   return (
     <div className="px-3 py-4 sm:p-6">
+      <SharingPanel
+        boards={boards}
+        activeBoardId={activeBoardId}
+        setActiveBoardId={setActiveBoardId}
+        isReadOnlyBoard={isReadOnlyBoard}
+        boardMembers={boardMembers}
+        myInvitations={myInvitations}
+        onInvite={inviteViewer}
+        onAcceptInvitation={acceptInvitation}
+        onDeclineInvitation={declineInvitation}
+      />
+
       <DndContext
-        sensors={sensors}
+        sensors={isReadOnlyBoard ? undefined : sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -77,6 +106,7 @@ export default function BoardView({ onAddTask, onEditTask }) {
               onAddTask={(s) => onAddTask(s)}
               onEditTask={onEditTask}
               onDeleteTask={deleteTask}
+              readOnly={isReadOnlyBoard}
             />
           ))}
         </div>

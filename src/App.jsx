@@ -12,7 +12,7 @@ import { useTasks } from "./context/TaskContext";
 
 function AppContent() {
   const { user, signOut } = useAuth();
-  const { addTask, updateTask, loading } = useTasks();
+  const { addTask, updateTask, loading, isReadOnlyBoard } = useTasks();
   const [view, setView] = useState("board");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [modal, setModal] = useState({
@@ -23,6 +23,11 @@ function AppContent() {
   });
 
   const openNew = (statusOrDate, time) => {
+    if (isReadOnlyBoard) {
+      toast.error("Este tablero es solo lectura");
+      return;
+    }
+
     // From board column → statusOrDate is a status string
     // From calendar → statusOrDate is a "yyyy-MM-dd" string
     const isStatus = ["todo", "inprogress", "done"].includes(statusOrDate);
@@ -36,12 +41,14 @@ function AppContent() {
   };
 
   const openEdit = (task) =>
-    setModal({
-      open: true,
-      task,
-      defaultStatus: task.status,
-      defaultDate: null,
-    });
+    isReadOnlyBoard
+      ? toast.error("Este tablero es solo lectura")
+      : setModal({
+          open: true,
+          task,
+          defaultStatus: task.status,
+          defaultDate: null,
+        });
   const closeModal = () => setModal((m) => ({ ...m, open: false }));
 
   const handleSave = async (data) => {
@@ -75,6 +82,7 @@ function AppContent() {
         onDateChange={setCurrentDate}
         userEmail={user?.email || ""}
         onSignOut={handleSignOut}
+        disableNewTask={isReadOnlyBoard}
       />
 
       <main className="pb-3 sm:pb-4">

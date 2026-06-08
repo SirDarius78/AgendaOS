@@ -2,26 +2,42 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "./AuthContext";
 import {
-  createTaskForUser,
-  deleteTaskForUser,
-  fetchTasksForUser,
-  moveTaskForUser,
-  reorderTasksForUser,
-  updateTaskForUser,
+  createTaskForBoard,
+  deleteTaskForBoard,
+  fetchTasksForBoard,
+  moveTaskForBoard,
+  reorderTasksForBoard,
+  updateTaskForBoard,
 } from "../services/taskService";
+import {
+  acceptInvitation,
+  declineInvitation,
+  fetchBoardMembers,
+  fetchMyPendingInvitations,
+  fetchReadableBoards,
+  inviteViewerToBoard,
+} from "../services/sharingService";
 
 const TaskContext = createContext(null);
 
 export function TaskProvider({ children }) {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [boards, setBoards] = useState([]);
+  const [activeBoardId, setActiveBoardId] = useState(null);
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [myInvitations, setMyInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadTasks = async () => {
+    const bootstrap = async () => {
       if (!user) {
+        setBoards([]);
+        setActiveBoardId(null);
+        setBoardMembers([]);
+        setMyInvitations([]);
         setTasks([]);
         setLoading(false);
         return;
@@ -29,11 +45,27 @@ export function TaskProvider({ children }) {
 
       setLoading(true);
       try {
-        const next = await fetchTasksForUser(user.id);
-        if (!cancelled) setTasks(next);
+        const [nextBoards, nextInvitations] = await Promise.all([
+          fetchReadableBoards(),
+          fetchMyPendingInvitations(user.id),
+        ]);
+
+        if (cancelled) return;
+
+        setBoards(nextBoards);
+        setMyInvitations(nextInvitations);
+
+        const firstBoardId = nextBoards[0]?.id ?? null;
+        setActiveBoardId((prev) => {
+          if (!prev) return firstBoardId;
+          const stillExists = nextBoards.some((board) => board.id === prev);
+          return stillExists ? prev : firstBoardId;
+        });
       } catch (error) {
         if (!cancelled) {
-          toast.error(error.message || "No se pudieron cargar las tareas");
+          toast.error(error.message || "No se pudieron cargar los tableros");
+          setBoards([]);
+          setActiveBoardId(null);
           setTasks([]);
         }
       } finally {
@@ -41,62 +73,168 @@ export function TaskProvider({ children }) {
       }
     };
 
-    loadTasks();
+    bootstrap();
     return () => {
       cancelled = true;
     };
   }, [user]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBoardData = async () => {
+      if (!user || !activeBoardId) {
+        setTasks([]);
+        setBoardMembers([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const [nextTasks, members] = await Promise.all([
+          fetchTasksForBoard(user.id, activeBoardId),
+          fetchBoardMembers(activeBoardId),
+        ]);
+
+        if (cancelled) return;
+        setTasks(nextTasks);
+        setBoardMembers(members);
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(error.message || "No se pudo cargar el tablero");
+          setTasks([]);
+          setBoardMembers([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadBoardData();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeBoardId, user]);
+
   const api = useMemo(() => {
+    const activeBoard =
+      boards.find((board) => board.id === activeBoardId) || null;
+    const isReadOnlyBoard = Boolean(
+      activeBoard && activeBoard.owner_user_id !== user?.id,
+    );
+
     return {
       tasks,
+      boards,
+      activeBoard,
+      activeBoardId,
+      setActiveBoardId,
+      boardMembers,
+      myInvitations,
+      isReadOnlyBoard,
       loading,
       async addTask(task) {
-        if (!user) return;
+        if (!user || !activeBoardId) return;
+        if (isReadOnlyBoard) throw new Error("Este tablero es solo lectura");
+
         const sameStatus = tasks.filter((t) => t.status === task.status);
-        const created = await createTaskForUser(
-          user.id,
+        const created = await createTaskForBoard({
+          userId: user.id,
+          boardId: activeBoardId,
           task,
-          sameStatus.length,
-        );
+          position: sameStatus.length,
+        });
         setTasks((prev) => [...prev, created]);
       },
       async updateTask(task) {
-        if (!user || !task?.id) return;
-        const updated = await updateTaskForUser(user.id, task.id, task);
+        if (!user || !task?.id || !activeBoardId) return;
+        if (isReadOnlyBoard) throw new Error("Este tablero es solo lectura");
+
+        const updated = await updateTaskForBoard({
+          userId: user.id,
+          boardId: activeBoardId,
+          taskId: task.id,
+          patch: task,
+        });
         setTasks((prev) =>
           prev.map((t) => (t.id === updated.id ? updated : t)),
         );
       },
       async deleteTask(id) {
-        if (!user) return;
+        if (!user || !activeBoardId || isReadOnlyBoard) return;
         try {
-          await deleteTaskForUser(user.id, id);
+          await deleteTaskForBoard({
+            userId: user.id,
+            boardId: activeBoardId,
+            taskId: id,
+          });
           setTasks((prev) => prev.filter((t) => t.id !== id));
         } catch (error) {
           toast.error(error.message || "No se pudo eliminar la tarea");
         }
       },
       async moveTask(id, status) {
-        if (!user) return;
+        if (!user || !activeBoardId || isReadOnlyBoard) return;
         try {
-          const moved = await moveTaskForUser(user.id, id, status);
+          const moved = await moveTaskForBoard({
+            userId: user.id,
+            boardId: activeBoardId,
+            taskId: id,
+            status,
+          });
           setTasks((prev) => prev.map((t) => (t.id === moved.id ? moved : t)));
         } catch (error) {
           toast.error(error.message || "No se pudo mover la tarea");
         }
       },
       async reorderTasks(nextTasks) {
-        if (!user) return;
+        if (!user || !activeBoardId || isReadOnlyBoard) return;
         setTasks(nextTasks);
         try {
-          await reorderTasksForUser(user.id, nextTasks);
+          await reorderTasksForBoard({
+            userId: user.id,
+            boardId: activeBoardId,
+            orderedTasks: nextTasks,
+          });
         } catch (error) {
           toast.error(error.message || "No se pudo reordenar");
         }
       },
+      async inviteViewer(email) {
+        if (!user || !activeBoardId || isReadOnlyBoard) return;
+
+        const created = await inviteViewerToBoard({
+          boardId: activeBoardId,
+          invitedByUserId: user.id,
+          email,
+        });
+
+        setBoardMembers((prev) => [created, ...prev]);
+      },
+      async acceptInvitation(memberId) {
+        if (!user) return;
+        const accepted = await acceptInvitation(memberId, user.id);
+        setMyInvitations((prev) => prev.filter((inv) => inv.id !== memberId));
+
+        const nextBoards = await fetchReadableBoards();
+        setBoards(nextBoards);
+        setActiveBoardId((prev) => prev ?? accepted.board_id);
+      },
+      async declineInvitation(memberId) {
+        if (!user) return;
+        await declineInvitation(memberId, user.id);
+        setMyInvitations((prev) => prev.filter((inv) => inv.id !== memberId));
+      },
     };
-  }, [loading, tasks, user]);
+  }, [
+    activeBoardId,
+    boardMembers,
+    boards,
+    loading,
+    myInvitations,
+    tasks,
+    user,
+  ]);
 
   return <TaskContext.Provider value={api}>{children}</TaskContext.Provider>;
 }
