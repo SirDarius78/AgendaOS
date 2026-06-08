@@ -12,7 +12,8 @@ import { useTasks } from "./context/TaskContext";
 
 function AppContent() {
   const { user, signOut } = useAuth();
-  const { addTask, updateTask, loading, isReadOnlyBoard } = useTasks();
+  const { addTask, updateTask, loading, isReadOnlyBoard, tasks, activeBoard } =
+    useTasks();
   const [view, setView] = useState("board");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [modal, setModal] = useState({
@@ -22,14 +23,118 @@ function AppContent() {
     defaultDate: null,
   });
 
+  const statusLabel = {
+    todo: "Por hacer",
+    inprogress: "En progreso",
+    done: "Completada",
+  };
+
+  const priorityLabel = {
+    low: "Baja",
+    medium: "Media",
+    high: "Alta",
+  };
+
+  const escapeHtml = (value = "") =>
+    String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  const handleExportPdf = () => {
+    if (!tasks?.length) {
+      toast.error("No hay tareas para exportar");
+      return;
+    }
+
+    const ordered = [...tasks].sort((a, b) => {
+      const statusOrder = { todo: 1, inprogress: 2, done: 3 };
+      const sa = statusOrder[a.status] || 99;
+      const sb = statusOrder[b.status] || 99;
+      if (sa !== sb) return sa - sb;
+      return String(a.title || "").localeCompare(String(b.title || ""));
+    });
+
+    const rows = ordered
+      .map(
+        (t) => `
+      <tr>
+        <td>${escapeHtml(t.title)}</td>
+        <td>${escapeHtml(statusLabel[t.status] || t.status || "-")}</td>
+        <td>${escapeHtml(priorityLabel[t.priority] || t.priority || "-")}</td>
+        <td>${escapeHtml(t.date || "-")}</td>
+        <td>${escapeHtml(t.time || "-")}</td>
+        <td>${escapeHtml((t.tags || []).join(", ") || "-")}</td>
+      </tr>
+    `,
+      )
+      .join("");
+
+    const w = window.open("", "_blank", "width=1100,height=800");
+    if (!w) {
+      toast.error("El navegador bloqueo la ventana para exportar");
+      return;
+    }
+
+    const now = new Date();
+    const fecha = now.toLocaleDateString("es-ES");
+    const hora = now.toLocaleTimeString("es-ES");
+
+    w.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Tareas - ${escapeHtml(activeBoard?.title || "Mi tablero")}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            h1 { margin: 0 0 6px; font-size: 20px; }
+            p { margin: 0 0 16px; color: #4b5563; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 12px; vertical-align: top; }
+            th { background: #f3f4f6; }
+            @media print {
+              @page { size: A4 landscape; margin: 12mm; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Listado de tareas</h1>
+          <p>Tablero: ${escapeHtml(activeBoard?.title || "Mi tablero")} | Generado: ${fecha} ${hora}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Titulo</th>
+                <th>Estado</th>
+                <th>Prioridad</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Etiquetas</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <script>
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+    w.document.close();
+  };
+
   const openNew = (statusOrDate, time) => {
     if (isReadOnlyBoard) {
       toast.error("Este tablero es solo lectura");
       return;
     }
 
-    // From board column → statusOrDate is a status string
-    // From calendar → statusOrDate is a "yyyy-MM-dd" string
     const isStatus = ["todo", "inprogress", "done"].includes(statusOrDate);
     setModal({
       open: true,
@@ -78,13 +183,13 @@ function AppContent() {
         view={view}
         onViewChange={setView}
         onNewTask={() => openNew("todo")}
+        onExportPdf={handleExportPdf}
         currentDate={currentDate}
         onDateChange={setCurrentDate}
         userEmail={user?.email || ""}
         onSignOut={handleSignOut}
         disableNewTask={isReadOnlyBoard}
       />
-
       <main className="pb-3 sm:pb-4">
         {loading && (
           <div className="px-4 py-12 text-center text-gray-400 text-sm">

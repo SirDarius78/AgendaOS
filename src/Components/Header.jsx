@@ -1,4 +1,3 @@
-import React from "react";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -7,7 +6,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  FileDown,
 } from "lucide-react";
+import PropTypes from "prop-types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -28,6 +29,7 @@ export default function Header({
   view,
   onViewChange,
   onNewTask,
+  onExportPdf,
   currentDate,
   onDateChange,
   userEmail,
@@ -37,7 +39,6 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100 px-3 py-3 sm:px-4">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
-        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <LayoutDashboard size={16} className="text-white" />
@@ -51,6 +52,18 @@ export default function Header({
               {userEmail}
             </span>
           )}
+
+          {onExportPdf && (
+            <button
+              onClick={onExportPdf}
+              className="inline-flex items-center gap-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-2.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              title="Exportar tareas a PDF"
+            >
+              <FileDown size={15} />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+          )}
+
           {onSignOut && (
             <button
               onClick={onSignOut}
@@ -71,7 +84,6 @@ export default function Header({
           </button>
         </div>
 
-        {/* View switcher */}
         <nav className="order-3 w-full sm:order-2 sm:w-auto overflow-x-auto">
           <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-0.5 min-w-max">
             {VIEWS.map(({ id, label, Icon }) => (
@@ -91,7 +103,6 @@ export default function Header({
           </div>
         </nav>
 
-        {/* Date navigation (week/day views) */}
         {(view === "week" || view === "day") && (
           <div className="order-4 w-full sm:order-none sm:w-auto flex items-center gap-1.5 sm:gap-2">
             <button
@@ -131,3 +142,15 @@ export default function Header({
     </header>
   );
 }
+
+Header.propTypes = {
+  view: PropTypes.oneOf(["board", "week", "day"]).isRequired,
+  onViewChange: PropTypes.func.isRequired,
+  onNewTask: PropTypes.func.isRequired,
+  onExportPdf: PropTypes.func,
+  currentDate: PropTypes.instanceOf(Date).isRequired,
+  onDateChange: PropTypes.func.isRequired,
+  userEmail: PropTypes.string,
+  onSignOut: PropTypes.func,
+  disableNewTask: PropTypes.bool,
+};
