@@ -6,6 +6,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -29,6 +30,8 @@ export default function Header({
   onNewTask,
   currentDate,
   onDateChange,
+  userEmail,
+  onSignOut,
 }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100 px-3 py-3 sm:px-4">
@@ -41,7 +44,22 @@ export default function Header({
           <span className="font-bold text-gray-800 text-lg">TaskFlow</span>
         </div>
 
-        <div className="ml-auto sm:order-3 sm:ml-0">
+        <div className="ml-auto sm:order-3 sm:ml-0 flex items-center gap-2">
+          {userEmail && (
+            <span className="hidden md:inline text-xs text-gray-500 bg-gray-100 px-2.5 py-1.5 rounded-lg max-w-[180px] truncate">
+              {userEmail}
+            </span>
+          )}
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 px-2.5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              title="Cerrar sesion"
+            >
+              <LogOut size={15} />
+              <span className="hidden sm:inline">Salir</span>
+            </button>
+          )}
           <button
             onClick={onNewTask}
             className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"

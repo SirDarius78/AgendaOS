@@ -1,82 +1,104 @@
-import React, { createContext, useContext, useEffect, useReducer } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { useAuth } from "./AuthContext";
+import {
+  createTaskForUser,
+  deleteTaskForUser,
+  fetchTasksForUser,
+  moveTaskForUser,
+  reorderTasksForUser,
+  updateTaskForUser,
+} from "../services/taskService";
 
-const STORAGE_KEY = "taskmanager_tasks";
-
-const defaultTasks = [];
-
-function loadFromStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : defaultTasks;
-  } catch {
-    return defaultTasks;
-  }
-}
-
-function saveToStorage(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-// ── Reducer ───────────────────────────────────────────────────────────────────
-function reducer(state, action) {
-  let next;
-  switch (action.type) {
-    case "ADD":
-      next = [
-        ...state,
-        {
-          ...action.payload,
-          id: uuidv4(),
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      break;
-    case "UPDATE":
-      next = state.map((t) =>
-        t.id === action.payload.id ? { ...t, ...action.payload } : t,
-      );
-      break;
-    case "DELETE":
-      next = state.filter((t) => t.id !== action.payload);
-      break;
-    case "MOVE":
-      next = state.map((t) =>
-        t.id === action.payload.id
-          ? { ...t, status: action.payload.status }
-          : t,
-      );
-      break;
-    case "REORDER":
-      next = action.payload;
-      break;
-    default:
-      return state;
-  }
-  saveToStorage(next);
-  return next;
-}
-
-// ── Context ───────────────────────────────────────────────────────────────────
 const TaskContext = createContext(null);
 
 export function TaskProvider({ children }) {
-  const [tasks, dispatch] = useReducer(reducer, [], loadFromStorage);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const addTask = (task) => dispatch({ type: "ADD", payload: task });
-  const updateTask = (task) => dispatch({ type: "UPDATE", payload: task });
-  const deleteTask = (id) => dispatch({ type: "DELETE", payload: id });
-  const moveTask = (id, status) =>
-    dispatch({ type: "MOVE", payload: { id, status } });
-  const reorderTasks = (tasks) => dispatch({ type: "REORDER", payload: tasks });
+  useEffect(() => {
+    let cancelled = false;
 
-  return (
-    <TaskContext.Provider
-      value={{ tasks, addTask, updateTask, deleteTask, moveTask, reorderTasks }}
-    >
-      {children}
-    </TaskContext.Provider>
-  );
+    const loadTasks = async () => {
+      if (!user) {
+        setTasks([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const next = await fetchTasksForUser(user.id);
+        if (!cancelled) setTasks(next);
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(error.message || "No se pudieron cargar las tareas");
+          setTasks([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadTasks();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const api = useMemo(() => {
+    return {
+      tasks,
+      loading,
+      async addTask(task) {
+        if (!user) return;
+        const sameStatus = tasks.filter((t) => t.status === task.status);
+        const created = await createTaskForUser(
+          user.id,
+          task,
+          sameStatus.length,
+        );
+        setTasks((prev) => [...prev, created]);
+      },
+      async updateTask(task) {
+        if (!user || !task?.id) return;
+        const updated = await updateTaskForUser(user.id, task.id, task);
+        setTasks((prev) =>
+          prev.map((t) => (t.id === updated.id ? updated : t)),
+        );
+      },
+      async deleteTask(id) {
+        if (!user) return;
+        try {
+          await deleteTaskForUser(user.id, id);
+          setTasks((prev) => prev.filter((t) => t.id !== id));
+        } catch (error) {
+          toast.error(error.message || "No se pudo eliminar la tarea");
+        }
+      },
+      async moveTask(id, status) {
+        if (!user) return;
+        try {
+          const moved = await moveTaskForUser(user.id, id, status);
+          setTasks((prev) => prev.map((t) => (t.id === moved.id ? moved : t)));
+        } catch (error) {
+          toast.error(error.message || "No se pudo mover la tarea");
+        }
+      },
+      async reorderTasks(nextTasks) {
+        if (!user) return;
+        setTasks(nextTasks);
+        try {
+          await reorderTasksForUser(user.id, nextTasks);
+        } catch (error) {
+          toast.error(error.message || "No se pudo reordenar");
+        }
+      },
+    };
+  }, [loading, tasks, user]);
+
+  return <TaskContext.Provider value={api}>{children}</TaskContext.Provider>;
 }
 
 export const useTasks = () => {

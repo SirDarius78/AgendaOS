@@ -37,10 +37,10 @@ export default function Column({
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div className="flex flex-col w-[86vw] max-w-sm sm:w-72 shrink-0 snap-start">
+    <div className="flex flex-col w-full sm:w-72 sm:shrink-0">
       {/* Column header */}
       <div
-        className={`flex items-center justify-between px-3 py-2.5 rounded-xl border mb-3 ${meta.header}`}
+        className={`sticky top-[72px] sm:static z-10 flex items-center justify-between px-3 py-2.5 rounded-xl border mb-3 shadow-sm sm:shadow-none ${meta.header}`}
       >
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${meta.dot}`} />

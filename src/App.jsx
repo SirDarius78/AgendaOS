@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import { TaskProvider } from "./context/TaskContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Header from "./Components/Header";
 import BoardView from "./Components/Board/BoardView";
 import WeekView from "./Components/Calendar/WeekView";
 import DayView from "./Components/Calendar/DayView";
 import TaskModal from "./Components/TaskModal";
+import AuthScreen from "./Components/Auth/AuthScreen";
 import { useTasks } from "./context/TaskContext";
 
 function AppContent() {
+  const { user, signOut } = useAuth();
+  const { addTask, updateTask, loading } = useTasks();
   const [view, setView] = useState("board");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [modal, setModal] = useState({
@@ -17,7 +21,6 @@ function AppContent() {
     defaultStatus: "todo",
     defaultDate: null,
   });
-  const { addTask, updateTask } = useTasks();
 
   const openNew = (statusOrDate, time) => {
     // From board column → statusOrDate is a status string
@@ -41,15 +44,24 @@ function AppContent() {
     });
   const closeModal = () => setModal((m) => ({ ...m, open: false }));
 
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     if (modal.task) {
-      updateTask({ ...modal.task, ...data });
+      await updateTask({ ...modal.task, ...data });
     } else {
-      addTask({
+      await addTask({
         ...data,
         status: data.status || modal.defaultStatus || "todo",
         time: data.time || modal.defaultTime || "",
       });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Sesion cerrada");
+    } catch (error) {
+      toast.error(error.message || "No se pudo cerrar sesion");
     }
   };
 
@@ -61,20 +73,27 @@ function AppContent() {
         onNewTask={() => openNew("todo")}
         currentDate={currentDate}
         onDateChange={setCurrentDate}
+        userEmail={user?.email || ""}
+        onSignOut={handleSignOut}
       />
 
       <main className="pb-3 sm:pb-4">
-        {view === "board" && (
+        {loading && (
+          <div className="px-4 py-12 text-center text-gray-400 text-sm">
+            Cargando tareas...
+          </div>
+        )}
+        {!loading && view === "board" && (
           <BoardView onAddTask={openNew} onEditTask={openEdit} />
         )}
-        {view === "week" && (
+        {!loading && view === "week" && (
           <WeekView
             currentDate={currentDate}
             onAddTask={openNew}
             onEditTask={openEdit}
           />
         )}
-        {view === "day" && (
+        {!loading && view === "day" && (
           <DayView
             currentDate={currentDate}
             onAddTask={openNew}
@@ -101,10 +120,30 @@ function AppContent() {
   );
 }
 
-export default function App() {
+function AppShell() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500">
+        Cargando sesion...
+      </div>
+    );
+  }
+
+  if (!user) return <AuthScreen />;
+
   return (
     <TaskProvider>
       <AppContent />
     </TaskProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
   );
 }

@@ -1,8 +1,44 @@
-# React + Vite
+# Todo App (React + Supabase)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacion de tareas con autenticacion por usuario y persistencia en Supabase.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node 18+
+- Proyecto de Supabase
+
+## Configuracion rapida
+
+1. Instala dependencias:
+
+```bash
+npm install
+```
+
+2. Crea tu archivo `.env` tomando como base `.env.example`:
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+```
+
+3. En Supabase, ejecuta el script SQL completo:
+
+- `supabase/schema.sql`
+
+4. Inicia en desarrollo:
+
+```bash
+npm run dev
+```
+
+## Modelo de datos
+
+- `auth.users`: usuarios nativo de Supabase Auth
+- `public.profiles`: perfil por usuario
+- `public.tasks`: tareas por usuario con estado (`todo`, `inprogress`, `done`)
+- `public.task_activity`: historial opcional
+
+## Seguridad (RLS)
+
+El script incluye Row Level Security para garantizar que cada usuario solo pueda leer/escribir sus propias tareas.

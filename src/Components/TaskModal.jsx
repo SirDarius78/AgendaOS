@@ -77,21 +77,25 @@ export default function TaskModal({
   const set = (field) => (e) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) {
       toast.error("El título es obligatorio");
       return;
     }
-    onSave({
-      ...form,
-      tags: form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    });
-    toast.success(initialData ? "Tarea actualizada ✓" : "Tarea creada ✓");
-    onClose();
+    try {
+      await onSave({
+        ...form,
+        tags: form.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      });
+      toast.success(initialData ? "Tarea actualizada ✓" : "Tarea creada ✓");
+      onClose();
+    } catch (error) {
+      toast.error(error.message || "No se pudo guardar la tarea");
+    }
   };
 
   const handleKeyDown = (e) => {
