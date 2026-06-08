@@ -16,6 +16,19 @@ export async function fetchReadableBoards() {
   return data || [];
 }
 
+export async function createOwnedBoard({ ownerUserId, title = "Mi tablero" }) {
+  const safeTitle = String(title || "").trim() || "Mi tablero";
+
+  const { data, error } = await supabase
+    .from("shared_boards")
+    .insert({ owner_user_id: ownerUserId, title: safeTitle })
+    .select("id, owner_user_id, title, created_at")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function inviteViewerToBoard({ boardId, email }) {
   const invitedEmail = normalizeEmail(email);
   if (!invitedEmail) throw new Error("El email de invitacion es obligatorio");

@@ -11,6 +11,7 @@ import {
 } from "../services/taskService";
 import {
   acceptInvitation,
+  createOwnedBoard,
   declineInvitation,
   fetchBoardMembers,
   fetchMyPendingInvitations,
@@ -45,10 +46,20 @@ export function TaskProvider({ children }) {
 
       setLoading(true);
       try {
-        const [nextBoards, nextInvitations] = await Promise.all([
+        const [readableBoards, nextInvitations] = await Promise.all([
           fetchReadableBoards(),
           fetchMyPendingInvitations(user.id),
         ]);
+
+        let nextBoards = readableBoards;
+
+        if (!nextBoards.length) {
+          const personalBoard = await createOwnedBoard({
+            ownerUserId: user.id,
+            title: "Mi tablero",
+          });
+          nextBoards = [personalBoard];
+        }
 
         if (cancelled) return;
 
@@ -134,7 +145,10 @@ export function TaskProvider({ children }) {
       isReadOnlyBoard,
       loading,
       async addTask(task) {
-        if (!user || !activeBoardId) return;
+        if (!user) throw new Error("Debes iniciar sesion");
+        if (!activeBoardId) {
+          throw new Error("No hay tablero activo para crear tareas");
+        }
         if (isReadOnlyBoard) throw new Error("Este tablero es solo lectura");
 
         const sameStatus = tasks.filter((t) => t.status === task.status);
@@ -147,7 +161,11 @@ export function TaskProvider({ children }) {
         setTasks((prev) => [...prev, created]);
       },
       async updateTask(task) {
-        if (!user || !task?.id || !activeBoardId) return;
+        if (!user) throw new Error("Debes iniciar sesion");
+        if (!task?.id) throw new Error("Tarea invalida");
+        if (!activeBoardId) {
+          throw new Error("No hay tablero activo para actualizar tareas");
+        }
         if (isReadOnlyBoard) throw new Error("Este tablero es solo lectura");
 
         const updated = await updateTaskForBoard({

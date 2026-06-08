@@ -1,5 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import AuthShell from "./AuthShell";
 
@@ -7,6 +8,7 @@ export default function LoginPage({ onGoToSignup }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -47,13 +49,24 @@ export default function LoginPage({ onGoToSignup }) {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
         />
-        <input
-          type="password"
-          placeholder="Contrasena"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Contrasena"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-11 outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-700"
+            aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
         <button
           type="submit"
           disabled={loading}
