@@ -22,9 +22,16 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
 ```
 
+Esas variables salen de tu proyecto de Supabase:
+
+- `VITE_SUPABASE_URL`: Settings > API > Project URL
+- `VITE_SUPABASE_ANON_KEY`: Settings > API > anon public key
+
 3. En Supabase, ejecuta el script SQL completo:
 
 - `supabase/schema.sql`
+
+Ese script crea la base de datos, las politicas RLS y el trigger que genera el perfil del usuario al registrarse.
 
 4. Inicia en desarrollo:
 
