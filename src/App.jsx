@@ -1,17 +1,22 @@
 import React, { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { TaskProvider } from "./context/TaskContext";
-import Header from "./components/Header";
-import BoardView from "./components/Board/BoardView";
-import WeekView from "./components/Calendar/WeekView";
-import DayView from "./components/Calendar/DayView";
-import TaskModal from "./components/TaskModal";
+import Header from "./Components/Header";
+import BoardView from "./Components/Board/BoardView";
+import WeekView from "./Components/Calendar/WeekView";
+import DayView from "./Components/Calendar/DayView";
+import TaskModal from "./Components/TaskModal";
 import { useTasks } from "./context/TaskContext";
 
 function AppContent() {
   const [view, setView] = useState("board");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [modal, setModal] = useState({ open: false, task: null, defaultStatus: "todo", defaultDate: null });
+  const [modal, setModal] = useState({
+    open: false,
+    task: null,
+    defaultStatus: "todo",
+    defaultDate: null,
+  });
   const { addTask, updateTask } = useTasks();
 
   const openNew = (statusOrDate, time) => {
@@ -27,7 +32,13 @@ function AppContent() {
     });
   };
 
-  const openEdit = (task) => setModal({ open: true, task, defaultStatus: task.status, defaultDate: null });
+  const openEdit = (task) =>
+    setModal({
+      open: true,
+      task,
+      defaultStatus: task.status,
+      defaultDate: null,
+    });
   const closeModal = () => setModal((m) => ({ ...m, open: false }));
 
   const handleSave = (data) => {
