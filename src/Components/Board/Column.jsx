@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import TaskCard from "./TaskCard";
-import { Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 const COLUMN_META = {
   todo: {
@@ -32,6 +32,7 @@ export default function Column({
   onEditTask,
   onDeleteTask,
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   const meta = COLUMN_META[id];
 
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -51,45 +52,65 @@ export default function Column({
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddTask(id)}
-          className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-
-      {/* Drop zone */}
-      <div
-        ref={setNodeRef}
-        className={`flex-1 flex flex-col gap-2 min-h-[200px] rounded-xl p-2 transition-colors ${
-          isOver ? "bg-indigo-50/60" : "bg-transparent"
-        }`}
-      >
-        <SortableContext
-          items={tasks.map((t) => t.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onEdit={onEditTask}
-              onDelete={onDeleteTask}
-            />
-          ))}
-        </SortableContext>
-
-        {tasks.length === 0 && (
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onAddTask(id)}
-            className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-gray-200 text-gray-300 hover:border-indigo-300 hover:text-indigo-400 transition-colors text-xs gap-1"
+            className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
+            title="Agregar tarea"
           >
-            <Plus size={18} />
-            Agregar tarea
+            <Plus size={14} />
           </button>
-        )}
+          <button
+            onClick={() => setCollapsed((prev) => !prev)}
+            className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-expanded={!collapsed}
+            title={collapsed ? "Abrir columna" : "Cerrar columna"}
+          >
+            {collapsed ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+          </button>
+        </div>
       </div>
+
+      {collapsed && (
+        <div className="px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-xs text-gray-400 bg-white/60">
+          Columna cerrada. {tasks.length}{" "}
+          {tasks.length === 1 ? "tarea" : "tareas"} ocultas.
+        </div>
+      )}
+
+      {/* Drop zone */}
+      {!collapsed && (
+        <div
+          ref={setNodeRef}
+          className={`flex-1 flex flex-col gap-2 min-h-[200px] rounded-xl p-2 transition-colors ${
+            isOver ? "bg-indigo-50/60" : "bg-transparent"
+          }`}
+        >
+          <SortableContext
+            items={tasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={onEditTask}
+                onDelete={onDeleteTask}
+              />
+            ))}
+          </SortableContext>
+
+          {tasks.length === 0 && (
+            <button
+              onClick={() => onAddTask(id)}
+              className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-gray-200 text-gray-300 hover:border-indigo-300 hover:text-indigo-400 transition-colors text-xs gap-1"
+            >
+              <Plus size={18} />
+              Agregar tarea
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

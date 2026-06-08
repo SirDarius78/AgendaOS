@@ -60,6 +60,14 @@ export function AuthProvider({ children }) {
         if (error) throw error;
         return data;
       },
+      async resendSignupConfirmation(email) {
+        const { data, error } = await supabase.auth.resend({
+          type: "signup",
+          email,
+        });
+        if (error) throw error;
+        return data;
+      },
       async signOut() {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;

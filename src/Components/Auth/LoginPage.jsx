@@ -21,7 +21,14 @@ export default function LoginPage({ onGoToSignup }) {
       await signIn(email.trim(), password);
       toast.success("Sesion iniciada");
     } catch (error) {
-      toast.error(error.message || "No se pudo iniciar sesion");
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("email not confirmed")) {
+        toast.error(
+          "Debes confirmar tu cuenta desde el correo antes de iniciar sesion",
+        );
+      } else {
+        toast.error(error.message || "No se pudo iniciar sesion");
+      }
     } finally {
       setLoading(false);
     }

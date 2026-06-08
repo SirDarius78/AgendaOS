@@ -4,11 +4,13 @@ import { useAuth } from "../../context/AuthContext";
 import AuthShell from "./AuthShell";
 
 export default function SignupPage({ onGoToLogin }) {
-  const { signUp } = useAuth();
+  const { signUp, resendSignupConfirmation } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState("");
+  const [resending, setResending] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,13 +32,31 @@ export default function SignupPage({ onGoToLogin }) {
       const data = await signUp(email.trim(), password);
       if (data?.session) {
         toast.success("Cuenta creada");
+        setPendingConfirmationEmail("");
+        onGoToLogin();
       } else {
-        toast.success("Revisa tu email para confirmar tu cuenta");
+        const safeEmail = email.trim();
+        setPendingConfirmationEmail(safeEmail);
+        toast.success("Cuenta creada. Revisa tu email para confirmarla.");
       }
     } catch (error) {
       toast.error(error.message || "No se pudo crear la cuenta");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!pendingConfirmationEmail) return;
+
+    setResending(true);
+    try {
+      await resendSignupConfirmation(pendingConfirmationEmail);
+      toast.success("Correo de confirmacion reenviado");
+    } catch (error) {
+      toast.error(error.message || "No se pudo reenviar el correo");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -75,6 +95,24 @@ export default function SignupPage({ onGoToLogin }) {
           {loading ? "Procesando..." : "Crear cuenta"}
         </button>
       </form>
+
+      {pendingConfirmationEmail && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm text-amber-800">
+            Te enviamos un correo de confirmacion a{" "}
+            <strong>{pendingConfirmationEmail}</strong>. Debes confirmar tu
+            cuenta para poder iniciar sesion.
+          </p>
+          <button
+            type="button"
+            onClick={handleResendConfirmation}
+            disabled={resending}
+            className="mt-3 w-full rounded-lg border border-amber-300 bg-white py-2.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+          >
+            {resending ? "Reenviando..." : "Reenviar correo de confirmacion"}
+          </button>
+        </div>
+      )}
 
       <button
         type="button"
