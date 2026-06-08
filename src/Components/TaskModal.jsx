@@ -102,13 +102,13 @@ export default function TaskModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={handleKeyDown}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">
             {initialData ? "Editar tarea" : "Nueva tarea"}
           </h2>
@@ -120,7 +120,10 @@ export default function TaskModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 sm:p-5 space-y-4 overflow-y-auto"
+        >
           {/* Title */}
           <div>
             <input
@@ -148,7 +151,7 @@ export default function TaskModal({
           <div className="h-px bg-gray-100" />
 
           {/* Date & Time */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
               <Calendar size={15} className="text-gray-400" />
               <input
@@ -170,7 +173,7 @@ export default function TaskModal({
           </div>
 
           {/* Priority */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Flag size={15} className="text-gray-400" />
             <span className="text-sm text-gray-500 mr-1">Prioridad:</span>
             {PRIORITIES.map((p) => (
@@ -190,7 +193,7 @@ export default function TaskModal({
           </div>
 
           {/* Status */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-gray-500">Estado:</span>
             <select
               value={form.status}
@@ -206,8 +209,8 @@ export default function TaskModal({
           </div>
 
           {/* Color & Tags */}
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex gap-1.5 flex-wrap">
               {COLORS.map((c) => (
                 <button
                   key={c}
@@ -235,7 +238,7 @@ export default function TaskModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2 pb-1">
             <button
               type="button"
               onClick={onClose}

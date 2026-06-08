@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { TaskProvider } from "./context/TaskContext";
 import Header from "./Components/Header";
@@ -63,7 +63,7 @@ function AppContent() {
         onDateChange={setCurrentDate}
       />
 
-      <main>
+      <main className="pb-3 sm:pb-4">
         {view === "board" && (
           <BoardView onAddTask={openNew} onEditTask={openEdit} />
         )}
@@ -92,7 +92,7 @@ function AppContent() {
       />
 
       <Toaster
-        position="bottom-right"
+        position="bottom-center"
         toastOptions={{
           style: { borderRadius: "12px", fontSize: "13px" },
         }}

@@ -5,12 +5,6 @@ import { Plus, Clock } from "lucide-react";
 import { useTasks } from "../../context/TaskContext";
 import { getWeekDays, parseDate } from "../../utils/dateUtils";
 
-const PRIORITY_DOT = {
-  high: "bg-red-400",
-  medium: "bg-amber-400",
-  low: "bg-emerald-400",
-};
-
 function MiniCard({ task, onEdit }) {
   return (
     <button
@@ -43,8 +37,8 @@ export default function WeekView({ currentDate, onAddTask, onEditTask }) {
       .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-7 gap-3">
+    <div className="px-3 py-4 sm:p-6">
+      <div className="flex sm:grid sm:grid-cols-7 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-1 touch-pan-x">
         {days.map((day) => {
           const dayTasks = tasksForDay(day);
           const today = isToday(day);
@@ -52,7 +46,7 @@ export default function WeekView({ currentDate, onAddTask, onEditTask }) {
           return (
             <div
               key={day.toISOString()}
-              className={`rounded-2xl border min-h-[300px] flex flex-col overflow-hidden transition-shadow hover:shadow-md ${
+              className={`w-[84vw] max-w-sm sm:w-auto rounded-2xl border min-h-[300px] flex flex-col overflow-hidden transition-shadow hover:shadow-md snap-start ${
                 today ? "border-indigo-300 shadow-sm" : "border-gray-100"
               }`}
             >

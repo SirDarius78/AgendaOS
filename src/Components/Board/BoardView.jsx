@@ -61,14 +61,14 @@ export default function BoardView({ onAddTask, onEditTask }) {
   };
 
   return (
-    <div className="p-6 overflow-x-auto">
+    <div className="px-3 py-4 sm:p-6 overflow-x-auto touch-pan-x">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-5 min-w-max">
+        <div className="flex gap-3 sm:gap-5 min-w-max snap-x snap-mandatory pb-1">
           {STATUSES.map((status) => (
             <Column
               key={status}

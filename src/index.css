@@ -7,7 +7,22 @@
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    margin: 0;
   }
+  button, input, select, textarea {
+    font: inherit;
+  }
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+/* Better touch scrolling for horizontal board and week lanes on iOS/mobile. */
+.touch-pan-x {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
 }
 
 @layer utilities {

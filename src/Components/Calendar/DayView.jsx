@@ -1,11 +1,8 @@
 import React from "react";
 import { format, isSameDay } from "date-fns";
-import { es } from "date-fns/locale";
 import { Plus, Clock } from "lucide-react";
 import { useTasks } from "../../context/TaskContext";
 import { HOURS, parseDate, formatLong } from "../../utils/dateUtils";
-
-const PRIORITY_COLOR = { high: "#ef4444", medium: "#f59e0b", low: "#10b981" };
 
 export default function DayView({ currentDate, onAddTask, onEditTask }) {
   const { tasks } = useTasks();
@@ -25,15 +22,15 @@ export default function DayView({ currentDate, onAddTask, onEditTask }) {
   const unscheduled = dayTasks.filter((t) => !t.time);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="px-3 py-4 sm:p-6 max-w-3xl mx-auto">
       {/* Day title */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800 capitalize">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 capitalize">
           {formatLong(currentDate)}
         </h2>
         <button
           onClick={() => onAddTask(format(currentDate, "yyyy-MM-dd"))}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
         >
           <Plus size={15} />
           Agregar tarea
@@ -42,7 +39,7 @@ export default function DayView({ currentDate, onAddTask, onEditTask }) {
 
       {/* Unscheduled tasks */}
       {unscheduled.length > 0 && (
-        <div className="mb-5 p-3 bg-gray-50 rounded-xl border border-gray-100">
+        <div className="mb-4 sm:mb-5 p-3 bg-gray-50 rounded-xl border border-gray-100">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
             Sin hora asignada
           </p>
@@ -59,9 +56,9 @@ export default function DayView({ currentDate, onAddTask, onEditTask }) {
         {HOURS.map((hour) => {
           const hourTasks = tasksForHour(hour);
           return (
-            <div key={hour} className="flex gap-4 group">
+            <div key={hour} className="flex gap-2 sm:gap-4 group">
               {/* Hour label */}
-              <div className="w-14 shrink-0 text-right">
+              <div className="w-12 sm:w-14 shrink-0 text-right">
                 <span className="text-xs text-gray-300 group-hover:text-gray-400 transition-colors">
                   {hour.toString().padStart(2, "0")}:00
                 </span>

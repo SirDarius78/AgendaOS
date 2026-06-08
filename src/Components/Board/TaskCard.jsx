@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Clock, Pencil, Trash2, GripVertical, Tag } from "lucide-react";
@@ -12,8 +12,6 @@ const PRIORITY_STYLES = {
 const PRIORITY_LABELS = { high: "Alta", medium: "Media", low: "Baja" };
 
 export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
-  const [hovered, setHovered] = useState(false);
-
   const {
     attributes,
     listeners,
@@ -38,8 +36,6 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
       className={`group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-default select-none ${
         overlay ? "shadow-xl rotate-1 scale-105" : ""
       }`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       {/* Color accent bar */}
       <div
@@ -53,7 +49,7 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
           <button
             {...attributes}
             {...listeners}
-            className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0"
+            className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 p-1 -m-1"
           >
             <GripVertical size={14} />
           </button>
@@ -107,20 +103,16 @@ export default function TaskCard({ task, onEdit, onDelete, overlay = false }) {
           </div>
 
           {/* Actions */}
-          <div
-            className={`flex gap-1 shrink-0 transition-opacity ${
-              hovered ? "opacity-100" : "opacity-0"
-            }`}
-          >
+          <div className="flex gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
             <button
               onClick={() => onEdit(task)}
-              className="p-1 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-colors"
             >
               <Pencil size={13} />
             </button>
             <button
               onClick={() => onDelete(task.id)}
-              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
             >
               <Trash2 size={13} />
             </button>

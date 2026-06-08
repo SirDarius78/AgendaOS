@@ -37,7 +37,7 @@ export default function Column({
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div className="flex flex-col w-72 shrink-0">
+    <div className="flex flex-col w-[86vw] max-w-sm sm:w-72 shrink-0 snap-start">
       {/* Column header */}
       <div
         className={`flex items-center justify-between px-3 py-2.5 rounded-xl border mb-3 ${meta.header}`}
@@ -53,7 +53,7 @@ export default function Column({
         </div>
         <button
           onClick={() => onAddTask(id)}
-          className="p-1 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
+          className="p-2 rounded-lg hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <Plus size={14} />
         </button>
