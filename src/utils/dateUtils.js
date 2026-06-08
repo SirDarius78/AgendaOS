@@ -6,6 +6,8 @@ import {
   isSameDay,
   addWeeks,
   subWeeks,
+  addDays,
+  subDays,
   parseISO,
   isValid,
 } from "date-fns";
@@ -30,6 +32,8 @@ export const isSame = (a, b) => isSameDay(a, b);
 
 export const nextWeek = (date) => addWeeks(date, 1);
 export const prevWeek = (date) => subWeeks(date, 1);
+export const nextDay = (date) => addDays(date, 1);
+export const prevDay = (date) => subDays(date, 1);
 
 export const parseDate = (str) => {
   if (!str) return null;

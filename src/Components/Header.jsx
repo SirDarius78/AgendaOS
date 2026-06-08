@@ -9,7 +9,13 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { formatLong, nextWeek, prevWeek } from "../utils/dateUtils";
+import {
+  formatLong,
+  nextDay,
+  nextWeek,
+  prevDay,
+  prevWeek,
+} from "../utils/dateUtils";
 
 const VIEWS = [
   { id: "board", label: "Board", Icon: LayoutDashboard },
@@ -57,7 +63,11 @@ export default function Header({
         {(view === "week" || view === "day") && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onDateChange(prevWeek(currentDate))}
+              onClick={() =>
+                onDateChange(
+                  view === "day" ? prevDay(currentDate) : prevWeek(currentDate),
+                )
+              }
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
             >
               <ChevronLeft size={16} />
@@ -68,7 +78,11 @@ export default function Header({
                 : formatLong(currentDate)}
             </span>
             <button
-              onClick={() => onDateChange(nextWeek(currentDate))}
+              onClick={() =>
+                onDateChange(
+                  view === "day" ? nextDay(currentDate) : nextWeek(currentDate),
+                )
+              }
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
             >
               <ChevronRight size={16} />
